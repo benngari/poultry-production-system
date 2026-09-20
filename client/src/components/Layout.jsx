@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', roles: null },
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
@@ -74,6 +76,14 @@ const Layout = ({ children }) => {
           </button>
           <div className="flex-1" />
           <div className="flex items-center gap-3">
+            <button
+              className="btn-secondary px-2"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label="Toggle dark mode"
+            >
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
             <span className="text-sm text-neutral-500">
               Welcome, <span className="font-semibold" style={{ color: 'var(--text)' }}>{user?.name}</span>
             </span>
