@@ -83,10 +83,20 @@ const Trash = () => {
                   <td>{label(item)}</td>
                   <td>{item.deletedAt ? new Date(item.deletedAt).toLocaleString() : '—'}</td>
                   <td className="whitespace-nowrap space-x-3">
-                    <button className="text-accent-600 text-xs font-semibold" onClick={() => restore(item._id)}>Restore</button>
-                    {tab === 'feed-ingredients' && (
-                      <button className="text-red-600 text-xs font-semibold" onClick={() => permanentDelete(item._id)}>Delete Forever</button>
-                    )}
+                    <button
+  className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400"
+  onClick={() => restore(item._id)}
+>
+  Restore
+</button>
+{tab === 'feed-ingredients' && (
+  <button
+    className="rounded-full bg-red-900 px-2 py-0.5 text-xs font-semibold text-white dark:bg-red-900 dark:text-red-100"
+    onClick={() => permanentDelete(item._id)}
+  >
+    Delete Forever
+  </button>
+)}
                   </td>
                 </tr>
               ))}
