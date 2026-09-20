@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import api from '../api/axios';
 import EmptyState from '../components/EmptyState';
 import { useAuth } from '../context/AuthContext';
+import TableSkeleton from '../components/TableSkeleton';
 
 const CAN_LOG = ['Administrator', 'Manager', 'Flock Operator'];
 
@@ -65,7 +66,7 @@ const EggLogPage = () => {
 
       <div className="table-wrap">
         {loading ? (
-          <div className="p-6 text-sm text-neutral-500">Loading…</div>
+          <TableSkeleton columns={3} />
         ) : logs.length === 0 ? (
           <EmptyState message="No egg collection entries yet." />
         ) : (

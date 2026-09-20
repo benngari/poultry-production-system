@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import EmptyState from '../components/EmptyState';
+import TableSkeleton from '../components/TableSkeleton';
 
 const SOURCES = [
   { key: 'egg-logs', label: 'Egg Collection' },
@@ -49,7 +50,7 @@ const Reports = () => {
 
       <div className="table-wrap">
         {loading ? (
-          <div className="p-6 text-sm text-neutral-500">Loading…</div>
+          <TableSkeleton columns={5} />
         ) : rows.length === 0 ? (
           <EmptyState message="No data for this report yet." />
         ) : (

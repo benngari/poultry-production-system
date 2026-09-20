@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import StatCard from '../components/StatCard';
+import CardsSkeleton from '../components/CardsSkeleton';
 import { useAuth } from '../context/AuthContext';
 
 const CAN_ADJUST_COUNTS = ['Administrator', 'Manager'];
@@ -50,7 +51,18 @@ const Flock = () => {
     }
   };
 
-  if (!flock || !feedStock) return <div className="text-sm text-neutral-500">Loading…</div>;
+  if (!flock || !feedStock) {
+    return (
+      <div className="space-y-4">
+        <h1 className="page-title">Flock</h1>
+        <CardsSkeleton count={4} columns="sm:grid-cols-4" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="h-56 animate-pulse rounded-xl bg-neutral-200 dark:bg-neutral-700" />
+          <div className="h-56 animate-pulse rounded-xl bg-neutral-200 dark:bg-neutral-700" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

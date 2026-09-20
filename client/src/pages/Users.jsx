@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import EmptyState from '../components/EmptyState';
+import TableSkeleton from '../components/TableSkeleton';
 
 const ROLES = ['Administrator', 'Manager', 'Flock Operator', 'Store Keeper'];
 
@@ -55,7 +56,7 @@ const Users = () => {
       <h1 className="page-title">User Management</h1>
       <div className="table-wrap">
         {loading ? (
-          <div className="p-6 text-sm text-neutral-500">Loading…</div>
+          <TableSkeleton columns={6} />
         ) : users.length === 0 ? (
           <EmptyState />
         ) : (

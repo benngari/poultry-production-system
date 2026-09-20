@@ -2,10 +2,8 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import EmptyState from '../components/EmptyState';
+import TableSkeleton from '../components/TableSkeleton';
 
-// One entry per AuditLog.action enum value (server/models/AuditLog.js).
-// Deep-red for permanent_delete keeps it visually distinct from a regular
-// (recoverable) delete — it's the one action with no way back.
 const ACTION_STYLES = {
   create: 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400',
   update: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
@@ -45,7 +43,7 @@ const AuditLogPage = () => {
       <h1 className="page-title">Audit Log</h1>
       <div className="table-wrap">
         {loading ? (
-          <div className="p-6 text-sm text-neutral-500">Loading…</div>
+          <TableSkeleton columns={5} />
         ) : logs.length === 0 ? (
           <EmptyState />
         ) : (

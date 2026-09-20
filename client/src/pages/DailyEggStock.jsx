@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import StatCard from '../components/StatCard';
+import CardsSkeleton from '../components/CardsSkeleton';
 import { useAuth } from '../context/AuthContext';
 
 const CAN_EDIT = ['Administrator', 'Manager', 'Store Keeper'];
@@ -48,7 +49,7 @@ const DailyEggStock = () => {
       </div>
 
       {loading || !row ? (
-        <div className="text-sm text-neutral-500">Loading…</div>
+        <CardsSkeleton count={5} columns="sm:grid-cols-3 lg:grid-cols-5" />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">

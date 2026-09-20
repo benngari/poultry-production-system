@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import EmptyState from '../components/EmptyState';
+import TableSkeleton from '../components/TableSkeleton';
 
 const TABS = [
   { key: 'feed-ingredients', label: 'Feed Ingredients' },
@@ -71,7 +72,7 @@ const Trash = () => {
       </div>
       <div className="table-wrap">
         {loading ? (
-          <div className="p-6 text-sm text-neutral-500">Loading…</div>
+          <TableSkeleton columns={3} />
         ) : items.length === 0 ? (
           <EmptyState message="Trash is empty." />
         ) : (
@@ -84,19 +85,19 @@ const Trash = () => {
                   <td>{item.deletedAt ? new Date(item.deletedAt).toLocaleString() : '—'}</td>
                   <td className="whitespace-nowrap space-x-3">
                     <button
-  className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400"
-  onClick={() => restore(item._id)}
->
-  Restore
-</button>
-{tab === 'feed-ingredients' && (
-  <button
-    className="rounded-full bg-red-900 px-2 py-0.5 text-xs font-semibold text-white dark:bg-red-900 dark:text-red-100"
-    onClick={() => permanentDelete(item._id)}
-  >
-    Delete Forever
-  </button>
-)}
+                      className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400"
+                      onClick={() => restore(item._id)}
+                    >
+                      Restore
+                    </button>
+                    {tab === 'feed-ingredients' && (
+                      <button
+                        className="rounded-full bg-red-900 px-2 py-0.5 text-xs font-semibold text-white dark:bg-red-900 dark:text-red-100"
+                        onClick={() => permanentDelete(item._id)}
+                      >
+                        Delete Forever
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

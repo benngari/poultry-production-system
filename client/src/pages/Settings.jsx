@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
+import FormSkeleton from '../components/FormSkeleton';
 import { useAuth } from '../context/AuthContext';
 
 const CAN_EDIT = ['Administrator', 'Manager'];
@@ -31,7 +32,14 @@ const Settings = () => {
     }
   };
 
-  if (!form) return <div className="text-sm text-neutral-500">Loading…</div>;
+  if (!form) {
+    return (
+      <div className="space-y-4">
+        <h1 className="page-title">Settings</h1>
+        <FormSkeleton fields={11} />
+      </div>
+    );
+  }
 
   const canEdit = CAN_EDIT.includes(user?.role);
   const field = (key, label, type = 'text', step) => (
