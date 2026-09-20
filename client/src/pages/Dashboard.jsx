@@ -12,12 +12,14 @@ const RANGES = [
 ];
 
 const money = (n, currency) => `${currency} ${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+const ALERTS_PER_PAGE = 10;
 
 const Dashboard = () => {
   const [summary, setSummary] = useState(null);
   const [weekly, setWeekly] = useState([]);
   const [range, setRange] = useState('week');
   const [loading, setLoading] = useState(true);
+  const [alertPage, setAlertPage] = useState(0);
 
   const loadSummary = async () => {
     try {
@@ -56,6 +58,13 @@ const Dashboard = () => {
   const currency = summary.settings?.currency || 'KSh';
   const profitTone = summary.today.profit >= 0 ? 'positive' : 'negative';
   const allTimeProfitTone = summary.allTime.expectedProfit >= 0 ? 'positive' : 'negative';
+
+  const totalAlertPages = Math.ceil(summary.lowStockIngredients.length / ALERTS_PER_PAGE) || 1;
+  const currentAlertPage = Math.min(alertPage, totalAlertPages - 1);
+  const pagedAlerts = summary.lowStockIngredients.slice(
+    currentAlertPage * ALERTS_PER_PAGE,
+    currentAlertPage * ALERTS_PER_PAGE + ALERTS_PER_PAGE
+  );
 
   return (
     <div className="space-y-6">
@@ -126,14 +135,35 @@ const Dashboard = () => {
               ✅ All stock levels are adequate.
             </div>
           ) : (
-            summary.lowStockIngredients.map((ing) => (
-              <div
-                key={ing._id}
-                className="flex items-center gap-2 text-sm text-red-600 bg-red-50 dark:bg-red-500/10 rounded-lg px-3 py-2 mb-2"
-              >
-                ⚠ {ing.name}: {ing.stock}{ing.unit} (min {ing.minStock}{ing.unit})
-              </div>
-            ))
+            <>
+              {pagedAlerts.map((ing) => (
+                <div
+                  key={ing._id}
+                  className="flex items-center gap-2 text-sm text-red-600 bg-red-50 dark:bg-red-500/10 rounded-lg px-3 py-2 mb-2"
+                >
+                  ⚠ {ing.name}: {ing.stock}{ing.unit} (min {ing.minStock}{ing.unit})
+                </div>
+              ))}
+              {totalAlertPages > 1 && (
+                <div className="flex items-center justify-between pt-1 text-xs text-neutral-500">
+                  <button
+                    className="btn-secondary px-2 py-1 disabled:opacity-40"
+                    disabled={currentAlertPage === 0}
+                    onClick={() => setAlertPage((p) => Math.max(0, p - 1))}
+                  >
+                    Previous
+                  </button>
+                  <span>Page {currentAlertPage + 1} of {totalAlertPages}</span>
+                  <button
+                    className="btn-secondary px-2 py-1 disabled:opacity-40"
+                    disabled={currentAlertPage >= totalAlertPages - 1}
+                    onClick={() => setAlertPage((p) => Math.min(totalAlertPages - 1, p + 1))}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
