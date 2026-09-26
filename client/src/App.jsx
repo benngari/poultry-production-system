@@ -12,6 +12,8 @@ import EggLog from './pages/EggLog';
 import DailyEggStock from './pages/DailyEggStock';
 import Flock from './pages/Flock';
 import BirdSales from './pages/BirdSales';
+import FeedingLog from './pages/FeedingLog';
+import ManureLog from './pages/ManureLog';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Users from './pages/Users';
@@ -33,6 +35,8 @@ function App() {
       <Route path="/daily-egg-stock" element={withLayout(<DailyEggStock />)} />
       <Route path="/flock" element={withLayout(<Flock />)} />
       <Route path="/bird-sales" element={withLayout(<BirdSales />)} />
+      <Route path="/feeding-log" element={withLayout(<FeedingLog />)} />
+      <Route path="/manure-log" element={withLayout(<ManureLog />)} />
       <Route path="/reports" element={withLayout(<Reports />)} />
       <Route path="/settings" element={withLayout(<Settings />)} />
       <Route

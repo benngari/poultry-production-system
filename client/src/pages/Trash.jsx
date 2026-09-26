@@ -8,6 +8,8 @@ const TABS = [
   { key: 'feed-ingredients', label: 'Feed Ingredients' },
   { key: 'egg-logs', label: 'Egg Logs' },
   { key: 'bird-sales', label: 'Bird Sales' },
+  { key: 'feeding-logs', label: 'Feeding Log' },
+  { key: 'manure-logs', label: 'Manure Log' },
 ];
 
 const Trash = () => {
@@ -54,7 +56,11 @@ const Trash = () => {
     }
   };
 
-  const label = (item) => item.name || `${item.quantity ?? ''} ${item.birdType ?? ''}`.trim() || new Date(item.date).toLocaleDateString();
+  const label = (item) =>
+    item.name ||
+    `${item.quantity ?? ''} ${item.birdType ?? ''}`.trim() ||
+    (item.quantityKg !== undefined ? `${item.quantityKg}kg — ${new Date(item.date).toLocaleDateString()}` : '') ||
+    new Date(item.date).toLocaleDateString();
 
   return (
     <div className="space-y-4">
