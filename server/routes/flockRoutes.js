@@ -3,6 +3,7 @@ const asyncHandler = require('express-async-handler');
 const Flock = require('../models/Flock');
 const FeedStock = require('../models/FeedStock');
 const Settings = require('../models/Settings');
+const FeedingLog = require('../models/FeedingLog');
 const logAction = require('../utils/logAction');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -64,12 +65,12 @@ router.post(
   })
 );
 
-// POST /api/flock/manual-feed-deduction  { quantityKg, note }
+// POST /api/flock/manual-feed-deduction  { quantityKg, note, date }
 router.post(
   '/manual-feed-deduction',
   authorize('Administrator', 'Manager', 'Flock Operator'),
   asyncHandler(async (req, res) => {
-    const { quantityKg, note } = req.body;
+    const { quantityKg, note, date } = req.body;
     const qty = Number(quantityKg);
     if (!qty || qty <= 0) {
       res.status(400);
@@ -83,6 +84,16 @@ router.post(
     }
     feedStock.stockKg -= qty;
     await feedStock.save();
+
+    // This is the actual queryable "feed given" record — previously the
+    // stock number moved but nothing showed up on a per-day feeding history.
+    await FeedingLog.create({
+      date: date ? new Date(date) : new Date(),
+      quantityKg: qty,
+      source: 'manual',
+      note: note || '',
+      recordedBy: req.user._id,
+    });
 
     await logAction(req, {
       action: 'stock_adjust',

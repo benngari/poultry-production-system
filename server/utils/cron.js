@@ -3,6 +3,7 @@ const Flock = require('../models/Flock');
 const Settings = require('../models/Settings');
 const FeedStock = require('../models/FeedStock');
 const AuditLog = require('../models/AuditLog');
+const FeedingLog = require('../models/FeedingLog');
 
 const todayStr = () => new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
 
@@ -51,6 +52,16 @@ const runAutoFeedDeduction = async () => {
   feedStock.stockKg -= requiredKg;
   feedStock.lastAutoDeductionDate = today;
   await feedStock.save();
+
+  // The actual reviewable "feed given today" record — this is the piece
+  // that was missing before: the deduction happened, but nothing queryable
+  // showed it on a per-day basis anywhere in the UI.
+  await FeedingLog.create({
+    date: new Date(),
+    quantityKg: requiredKg,
+    source: 'auto',
+    note: `Auto: ${flock.liveLayerCount} layers x ${settings.feedPerLayerKgPerDay}kg + ${flock.liveRoosterCount} roosters x ${settings.feedPerRoosterKgPerDay}kg`,
+  });
 
   await AuditLog.create({
     userName: 'System (cron)',
