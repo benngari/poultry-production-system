@@ -65,7 +65,8 @@ const Settings = () => {
         {field('address', 'Address')}
         {field('phone', 'Phone')}
         {field('email', 'Email')}
-        {field('eggSellingPrice', 'Egg selling price', 'number', '0.01')}
+        {field('eggSellingPrice', 'Egg selling price (per egg)', 'number', '0.01')}
+        {field('compoundedFeedCostPerKg', 'Compounded feed cost (per kg)', 'number', '0.01')}
         {field('dailyLabourCost', 'Daily labour cost', 'number', '0.01')}
         {field('hoursPerShift', 'Hours per shift', 'number', '0.5')}
         {field('feedPerLayerKgPerDay', 'Feed per layer (kg/day)', 'number', '0.001')}

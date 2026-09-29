@@ -56,27 +56,49 @@ router.get(
   })
 );
 
-// PUT /api/daily-egg-stock/:date  { closingStock }
+// PUT /api/daily-egg-stock/:date  { soldQuantity } — or { closingStock } for
+// backward compatibility. soldQuantity is the natural way to enter this
+// ("we sold 40 eggs today") — closingStock is derived from it, not the
+// other way around.
 router.put(
   '/:date',
   authorize('Administrator', 'Manager', 'Store Keeper'),
   asyncHandler(async (req, res) => {
-    const { closingStock } = req.body;
+    const { soldQuantity, closingStock } = req.body;
     const row = await DailyEggStock.findOne({ date: req.params.date, isDeleted: { $ne: true } });
     if (!row) {
       res.status(404);
       throw new Error('Row for this date does not exist yet — load it first via GET');
     }
-    const closing = Number(closingStock);
-    if (closing < 0) {
+
+    let sold, closing;
+    if (soldQuantity !== undefined) {
+      sold = Number(soldQuantity);
+      if (sold < 0) {
+        res.status(400);
+        throw new Error('Eggs sold cannot be negative');
+      }
+      closing = row.openingStock + row.addedStock - sold;
+      if (closing < 0) {
+        res.status(400);
+        throw new Error(`Cannot sell ${sold} eggs — only ${row.openingStock + row.addedStock} available (opening + collected today)`);
+      }
+    } else if (closingStock !== undefined) {
+      closing = Number(closingStock);
+      if (closing < 0) {
+        res.status(400);
+        throw new Error('Closing stock cannot be negative');
+      }
+      sold = row.openingStock + row.addedStock - closing;
+      if (sold < 0) {
+        res.status(400);
+        throw new Error('Closing stock cannot exceed opening + added stock');
+      }
+    } else {
       res.status(400);
-      throw new Error('Closing stock cannot be negative');
+      throw new Error('Provide soldQuantity (or closingStock)');
     }
-    const sold = row.openingStock + row.addedStock - closing;
-    if (sold < 0) {
-      res.status(400);
-      throw new Error('Closing stock cannot exceed opening + added stock');
-    }
+
     row.closingStock = closing;
     row.soldQuantity = sold;
     row.revenue = sold * row.unitPrice;
@@ -87,7 +109,7 @@ router.put(
       entityType: 'DailyEggStock',
       entityId: row._id,
       entityLabel: row.date,
-      details: `Closing stock set to ${closing}, sold ${sold}, revenue ${row.revenue}`,
+      details: `Sold ${sold} eggs @ ${row.unitPrice} = ${row.revenue}, closing stock ${closing}`,
     });
 
     res.json(row);

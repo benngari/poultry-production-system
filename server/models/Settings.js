@@ -12,6 +12,7 @@ const settingsSchema = new mongoose.Schema(
     feedPerLayerKgPerDay: { type: Number, default: 0.14 },
     feedPerRoosterKgPerDay: { type: Number, default: 0.14 },
     eggSellingPrice: { type: Number, default: 15 },
+    compoundedFeedCostPerKg: { type: Number, default: 49 },
     feedLowStockThresholdKg: { type: Number, default: 20 },
   },
   { timestamps: true }

@@ -12,7 +12,7 @@ const DailyEggStock = () => {
   const { user } = useAuth();
   const [date, setDate] = useState(todayStr());
   const [row, setRow] = useState(null);
-  const [closing, setClosing] = useState('');
+  const [sold, setSold] = useState('');
   const [loading, setLoading] = useState(true);
 
   const load = async (d) => {
@@ -20,7 +20,7 @@ const DailyEggStock = () => {
     try {
       const res = await api.get(`/daily-egg-stock/${d}`);
       setRow(res.data);
-      setClosing(res.data.closingStock);
+      setSold(res.data.soldQuantity);
     } catch (err) {
       toast.error('Failed to load daily stock');
     } finally {
@@ -33,13 +33,17 @@ const DailyEggStock = () => {
   const submit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.put(`/daily-egg-stock/${date}`, { closingStock: closing });
+      const res = await api.put(`/daily-egg-stock/${date}`, { soldQuantity: sold });
       setRow(res.data);
-      toast.success('Reconciliation saved');
+      toast.success('Eggs sold saved');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save');
     }
   };
+
+  const soldPreview = Number(sold) || 0;
+  const revenuePreview = row ? soldPreview * row.unitPrice : 0;
+  const availableToday = row ? row.openingStock + row.addedStock : 0;
 
   return (
     <div className="space-y-4">
@@ -55,21 +59,31 @@ const DailyEggStock = () => {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             <StatCard label="Opening Stock" value={row.openingStock} />
             <StatCard label="Added (Collected)" value={row.addedStock} />
+            <StatCard label="Eggs Sold" value={row.soldQuantity} />
             <StatCard label="Closing Stock" value={row.closingStock} />
-            <StatCard label="Sold" value={row.soldQuantity} />
             <StatCard label="Revenue" value={row.revenue.toFixed(2)} />
           </div>
 
           {CAN_EDIT.includes(user?.role) && (
             <form onSubmit={submit} className="app-card grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
               <div>
-                <label className="text-sm font-medium mb-1 block">Closing stock (eggs remaining)</label>
-                <input required type="number" min="0" className="input-field" value={closing} onChange={(e) => setClosing(e.target.value)} />
+                <label className="text-sm font-medium mb-1 block">Eggs sold today</label>
+                <input
+                  required
+                  type="number"
+                  min="0"
+                  max={availableToday}
+                  className="input-field"
+                  value={sold}
+                  onChange={(e) => setSold(e.target.value)}
+                />
               </div>
               <div className="text-sm text-neutral-500 sm:col-span-1">
-                Unit price: {row.unitPrice} (from Settings, today's row auto-syncs)
+                {row.unitPrice}/egg × {soldPreview} = {revenuePreview.toFixed(2)} revenue
+                <br />
+                {availableToday} available (opening + collected)
               </div>
-              <button type="submit" className="btn-primary">Save Reconciliation</button>
+              <button type="submit" className="btn-primary">Save Eggs Sold</button>
             </form>
           )}
         </>
