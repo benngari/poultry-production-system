@@ -4,6 +4,7 @@ const EggLog = require('../models/EggLog');
 const DailyEggStock = require('../models/DailyEggStock');
 const BirdSale = require('../models/BirdSale');
 const FeedBatch = require('../models/FeedBatch');
+const FeedingLog = require('../models/FeedingLog');
 const FeedIngredient = require('../models/FeedIngredient');
 const FeedStock = require('../models/FeedStock');
 const Flock = require('../models/Flock');
@@ -26,7 +27,7 @@ router.get(
 
     const [
       eggsToday,
-      todaysBatches,
+      todaysFeedingLogs,
       todaysStockRow,
       todaysBirdSales,
       allEggLogs,
@@ -41,7 +42,11 @@ router.get(
         { $match: { isDeleted: { $ne: true }, date: { $gte: startOfDay(today), $lte: endOfDay(today) } } },
         { $group: { _id: null, total: { $sum: '$quantityCollected' } } },
       ]),
-      FeedBatch.find({ date: { $gte: startOfDay(today), $lte: endOfDay(today) } }),
+      // Feed actually given to the flock today — FeedingLog, not FeedBatch.
+      // FeedBatch is "feed added to the store" (production); FeedingLog is
+      // "feed scooped out of the store and fed" (consumption). These are
+      // different numbers and the dashboard previously conflated them.
+      FeedingLog.find({ isDeleted: { $ne: true }, date: { $gte: startOfDay(today), $lte: endOfDay(today) } }),
       DailyEggStock.findOne({ date: todayKey, isDeleted: { $ne: true } }),
       BirdSale.find({ isDeleted: { $ne: true }, date: { $gte: startOfDay(today), $lte: endOfDay(today) } }),
       EggLog.aggregate([
@@ -63,12 +68,16 @@ router.get(
     const allEggStockRows = await DailyEggStock.find({ isDeleted: { $ne: true } });
     const totalEggRevenue = allEggStockRows.reduce((s, r) => s + (r.revenue || 0), 0);
 
-    const feedConsumedToday = todaysBatches.reduce((s, b) => s + b.totalKg, 0);
+    const feedConsumedToday = todaysFeedingLogs.reduce((s, l) => s + l.quantityKg, 0);
     const eggRevenueToday = todaysStockRow ? todaysStockRow.revenue : 0;
     const birdRevenueToday = todaysBirdSales.reduce((s, b) => s + b.totalPrice, 0);
     const revenueToday = eggRevenueToday + birdRevenueToday;
 
-    const todaysFeedCost = todaysBatches.reduce((s, b) => s + b.totalCost, 0);
+    // Today's feed cost = feed actually consumed today, priced at the flat
+    // compounded-feed rate — not the cost of whatever was newly batched
+    // today (that's a store-stocking event, not a same-day expense against
+    // today's egg/bird revenue).
+    const todaysFeedCost = feedConsumedToday * settings.compoundedFeedCostPerKg;
     const profitToday = revenueToday - todaysFeedCost;
 
     const totalFeedCost = allBatches[0] ? allBatches[0].totalCost : 0;
@@ -114,18 +123,19 @@ router.get(
       d.setDate(d.getDate() - i);
       const key = dateStr(d);
 
-      const [eggAgg, batches] = await Promise.all([
+      const [eggAgg, feedingLogs] = await Promise.all([
         EggLog.aggregate([
           { $match: { isDeleted: { $ne: true }, date: { $gte: startOfDay(d), $lte: endOfDay(d) } } },
           { $group: { _id: null, total: { $sum: '$quantityCollected' } } },
         ]),
-        FeedBatch.find({ date: { $gte: startOfDay(d), $lte: endOfDay(d) } }),
+        // Same fix as /summary — consumption (FeedingLog), not production (FeedBatch).
+        FeedingLog.find({ isDeleted: { $ne: true }, date: { $gte: startOfDay(d), $lte: endOfDay(d) } }),
       ]);
 
       points.push({
         date: key,
         eggsCollected: eggAgg[0]?.total || 0,
-        feedConsumedKg: batches.reduce((s, b) => s + b.totalKg, 0),
+        feedConsumedKg: feedingLogs.reduce((s, l) => s + l.quantityKg, 0),
       });
     }
 

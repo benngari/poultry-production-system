@@ -15,6 +15,19 @@ const SOURCES = [
 
 const OMIT_KEYS = ['_id', '__v', 'isDeleted', 'deletedAt', 'deletedBy', 'ingredientsUsed'];
 
+// Populated user references (producedBy, recordedBy) arrive as
+// { _id, name } objects. Show just the name — the raw object (with its
+// Mongo _id hash) is what was leaking into Reports as "database hashname
+// instead of username".
+const formatCell = (v) => {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'object') {
+    if (typeof v.name === 'string') return v.name;
+    return JSON.stringify(v);
+  }
+  return v;
+};
+
 const Reports = () => {
   const [source, setSource] = useState('egg-logs');
   const [rows, setRows] = useState([]);
@@ -33,14 +46,7 @@ const Reports = () => {
   const buildAoa = () => {
     const keys = Object.keys(rows[0]).filter((k) => !OMIT_KEYS.includes(k));
     const header = keys;
-    const body = rows.map((r) =>
-      keys.map((k) => {
-        const v = r[k];
-        if (v === null || v === undefined) return '';
-        if (typeof v === 'object') return JSON.stringify(v);
-        return v;
-      })
-    );
+    const body = rows.map((r) => keys.map((k) => formatCell(r[k])));
     return [header, ...body];
   };
 
@@ -113,7 +119,7 @@ const Reports = () => {
               {rows.map((r) => (
                 <tr key={r._id}>
                   {Object.keys(r).filter((k) => !OMIT_KEYS.includes(k)).map((k) => (
-                    <td key={k}>{typeof r[k] === 'object' && r[k] !== null ? JSON.stringify(r[k]) : String(r[k] ?? '')}</td>
+                    <td key={k}>{String(formatCell(r[k]))}</td>
                   ))}
                 </tr>
               ))}

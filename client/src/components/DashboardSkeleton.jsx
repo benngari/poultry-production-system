@@ -22,8 +22,8 @@ const DashboardSkeleton = () => (
     <Line className="h-6 w-32" />
 
     {/* Row 1 — Today's stats */}
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-      {Array.from({ length: 5 }).map((_, i) => (
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      {Array.from({ length: 6 }).map((_, i) => (
         <StatCardSkeleton key={i} />
       ))}
     </div>

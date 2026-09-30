@@ -14,7 +14,7 @@ const CAN_LOG = ['Administrator', 'Manager', 'Flock Operator'];
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const logs = await ManureLog.find({ isDeleted: { $ne: true } }).sort({ date: -1 }).limit(200);
+    const logs = await ManureLog.find({ isDeleted: { $ne: true } }).sort({ date: -1 }).limit(200).populate('recordedBy', 'name');
     res.json(logs);
   })
 );

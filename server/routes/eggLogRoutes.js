@@ -10,7 +10,7 @@ router.use(protect);
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const logs = await EggLog.find({ isDeleted: { $ne: true } }).sort({ date: -1 }).limit(200);
+    const logs = await EggLog.find({ isDeleted: { $ne: true } }).sort({ date: -1 }).limit(200).populate('recordedBy', 'name');
     res.json(logs);
   })
 );

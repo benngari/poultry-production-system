@@ -17,6 +17,7 @@ const ALERTS_PER_PAGE = 10;
 const Dashboard = () => {
   const [summary, setSummary] = useState(null);
   const [weekly, setWeekly] = useState([]);
+  const [feedManure, setFeedManure] = useState([]);
   const [range, setRange] = useState('week');
   const [loading, setLoading] = useState(true);
   const [alertPage, setAlertPage] = useState(0);
@@ -39,10 +40,47 @@ const Dashboard = () => {
     }
   };
 
+  const dateKey = (d) => new Date(d).toISOString().slice(0, 10);
+
+  const loadFeedManure = async () => {
+    try {
+      const [feedingRes, manureRes] = await Promise.all([
+        api.get('/feeding-logs'),
+        api.get('/manure-logs'),
+      ]);
+
+      const feedByDay = {};
+      feedingRes.data.forEach((l) => {
+        const k = dateKey(l.date);
+        feedByDay[k] = (feedByDay[k] || 0) + l.quantityKg;
+      });
+      const manureByDay = {};
+      manureRes.data.forEach((l) => {
+        const k = dateKey(l.date);
+        manureByDay[k] = (manureByDay[k] || 0) + l.quantityKg;
+      });
+
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const key = dateKey(d);
+        days.push({
+          date: key,
+          feedKg: feedByDay[key] || 0,
+          manureKg: manureByDay[key] || 0,
+        });
+      }
+      setFeedManure(days);
+    } catch (err) {
+      toast.error('Failed to load feed vs manure data');
+    }
+  };
+
   useEffect(() => {
     (async () => {
       setLoading(true);
-      await Promise.all([loadSummary(), loadWeekly(range)]);
+      await Promise.all([loadSummary(), loadWeekly(range), loadFeedManure()]);
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,9 +109,14 @@ const Dashboard = () => {
       <h1 className="page-title">Dashboard</h1>
 
       {/* Row 1 — Today's stats */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard label="Eggs Collected Today" value={summary.today.eggsCollected} />
         <StatCard label="Feed Consumed Today (kg)" value={summary.today.feedConsumedKg.toFixed(2)} />
+        <StatCard
+          label="Feed In Store (kg)"
+          value={summary.feedStock.stockKg.toFixed(2)}
+          tone={summary.feedStock.stockKg <= summary.feedStock.minStockKg ? 'negative' : undefined}
+        />
         <StatCard label="Revenue Today" value={money(summary.today.revenue, currency)} />
         <StatCard label="Profit Today" value={money(summary.today.profit, currency)} tone={profitTone} />
         <StatCard label="Birds Sold Today" value={summary.today.birdsSold} />
@@ -117,7 +160,7 @@ const Dashboard = () => {
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="feedConsumedKg" name="Feed (kg)" fill="#a3a3f7" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="feedConsumedKg" name="Feed Consumed (kg)" fill="#a3a3f7" radius={[4, 4, 0, 0]} />
               <Bar dataKey="eggsCollected" name="Eggs" fill="#16a34a" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -166,6 +209,25 @@ const Dashboard = () => {
             </>
           )}
         </div>
+      </div>
+
+      <div className="app-card">
+        <h2 className="font-semibold mb-4">Feed vs Manure — Last 7 Days</h2>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={feedManure}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="feedKg" name="Feed Given (kg)" fill="#a3a3f7" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="manureKg" name="Manure (kg)" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+        <p className="text-xs text-neutral-500 mt-2">
+          A rising manure-to-feed ratio over time can flag spillage, waste, or a health issue worth a
+          closer look — full daily breakdown and totals are on the Manure / Waste page.
+        </p>
       </div>
     </div>
   );
