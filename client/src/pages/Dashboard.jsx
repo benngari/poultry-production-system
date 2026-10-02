@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [range, setRange] = useState('week');
   const [loading, setLoading] = useState(true);
   const [alertPage, setAlertPage] = useState(0);
+  const [feedCostBasis, setFeedCostBasis] = useState('consumed'); // 'consumed' | 'produced'
 
   const loadSummary = async () => {
     try {
@@ -95,7 +96,10 @@ const Dashboard = () => {
 
   const currency = summary.settings?.currency || 'KSh';
   const profitTone = summary.today.profit >= 0 ? 'positive' : 'negative';
-  const allTimeProfitTone = summary.allTime.expectedProfit >= 0 ? 'positive' : 'negative';
+
+  const totalFeedCost = feedCostBasis === 'consumed' ? summary.allTime.totalFeedCostConsumed : summary.allTime.totalFeedCostProduced;
+  const expectedProfit = feedCostBasis === 'consumed' ? summary.allTime.expectedProfitConsumed : summary.allTime.expectedProfitProduced;
+  const allTimeProfitTone = expectedProfit >= 0 ? 'positive' : 'negative';
 
   const totalAlertPages = Math.ceil(summary.lowStockIngredients.length / ALERTS_PER_PAGE) || 1;
   const currentAlertPage = Math.min(alertPage, totalAlertPages - 1);
@@ -108,7 +112,6 @@ const Dashboard = () => {
     <div className="space-y-6">
       <h1 className="page-title">Dashboard</h1>
 
-      {/* Row 1 — Today's stats */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard label="Eggs Collected Today" value={summary.today.eggsCollected} />
         <StatCard label="Feed Consumed Today (kg)" value={summary.today.feedConsumedKg.toFixed(2)} />
@@ -122,17 +125,40 @@ const Dashboard = () => {
         <StatCard label="Birds Sold Today" value={summary.today.birdsSold} />
       </div>
 
-      {/* Poultry Totals (All Time) */}
       <div>
-        <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-2">Poultry Totals (All Time)</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide">Poultry Totals (All Time)</h2>
+          <div className="flex gap-1 rounded-lg border p-1" style={{ borderColor: 'var(--border)' }}>
+            <button
+              onClick={() => setFeedCostBasis('consumed')}
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                feedCostBasis === 'consumed' ? 'bg-accent-600 text-white' : 'text-neutral-500'
+              }`}
+            >
+              By Feed Consumed
+            </button>
+            <button
+              onClick={() => setFeedCostBasis('produced')}
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                feedCostBasis === 'produced' ? 'bg-accent-600 text-white' : 'text-neutral-500'
+              }`}
+            >
+              By Feed Purchased
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
           <StatCard label="Total Eggs Collected" value={summary.allTime.totalEggsCollected} />
-          <StatCard label="Total Feed Cost" value={money(summary.allTime.totalFeedCost, currency)} />
+          <StatCard label="Total Feed Cost" value={money(totalFeedCost, currency)} />
           <StatCard label="Total Revenue" value={money(summary.allTime.totalRevenue, currency)} />
-          <StatCard label="Expected Profit" value={money(summary.allTime.expectedProfit, currency)} tone={allTimeProfitTone} />
+          <StatCard label="Expected Profit" value={money(expectedProfit, currency)} tone={allTimeProfitTone} />
           <StatCard label="Total Birds Sold" value={summary.allTime.totalBirdsSold} />
           <StatCard label="Current Flock Size" value={summary.allTime.currentFlockSize} />
         </div>
+        <p className="text-xs text-neutral-500 mt-2">
+          "By Feed Consumed" costs only the feed actually fed out so far ({summary.allTime.totalFeedConsumedKg.toFixed(2)}kg).
+          "By Feed Purchased" costs every kg ever added to the store, including feed still sitting unused.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
