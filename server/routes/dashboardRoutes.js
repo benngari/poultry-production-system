@@ -32,6 +32,7 @@ router.get(
       todaysBirdSales,
       allEggLogs,
       allBatches,
+      allFeedingLogs,
       allBirdSales,
       flock,
       feedStock,
@@ -44,8 +45,7 @@ router.get(
       ]),
       // Feed actually given to the flock today — FeedingLog, not FeedBatch.
       // FeedBatch is "feed added to the store" (production); FeedingLog is
-      // "feed scooped out of the store and fed" (consumption). These are
-      // different numbers and the dashboard previously conflated them.
+      // "feed scooped out of the store and fed" (consumption).
       FeedingLog.find({ isDeleted: { $ne: true }, date: { $gte: startOfDay(today), $lte: endOfDay(today) } }),
       DailyEggStock.findOne({ date: todayKey, isDeleted: { $ne: true } }),
       BirdSale.find({ isDeleted: { $ne: true }, date: { $gte: startOfDay(today), $lte: endOfDay(today) } }),
@@ -54,6 +54,11 @@ router.get(
         { $group: { _id: null, total: { $sum: '$quantityCollected' } } },
       ]),
       FeedBatch.aggregate([{ $group: { _id: null, totalCost: { $sum: '$totalCost' } } }]),
+      // All-time feed consumed, for the "by consumption" cost basis.
+      FeedingLog.aggregate([
+        { $match: { isDeleted: { $ne: true } } },
+        { $group: { _id: null, totalKg: { $sum: '$quantityKg' } } },
+      ]),
       BirdSale.aggregate([
         { $match: { isDeleted: { $ne: true } } },
         { $group: { _id: null, totalRevenue: { $sum: '$totalPrice' }, totalCount: { $sum: '$quantity' } } },
@@ -73,18 +78,24 @@ router.get(
     const birdRevenueToday = todaysBirdSales.reduce((s, b) => s + b.totalPrice, 0);
     const revenueToday = eggRevenueToday + birdRevenueToday;
 
-    // Today's feed cost = feed actually consumed today, priced at the flat
-    // compounded-feed rate — not the cost of whatever was newly batched
-    // today (that's a store-stocking event, not a same-day expense against
-    // today's egg/bird revenue).
+    // Today's feed cost always uses consumption (what was actually eaten
+    // today), priced at the flat compounded-feed rate — a same-day P&L
+    // view only makes sense against same-day consumption.
     const todaysFeedCost = feedConsumedToday * settings.compoundedFeedCostPerKg;
     const profitToday = revenueToday - todaysFeedCost;
 
-    const totalFeedCost = allBatches[0] ? allBatches[0].totalCost : 0;
+    // All-time: TWO bases, since "how much have I spent stocking feed"
+    // and "what did the feed I actually fed out cost" are both legitimate
+    // questions with different answers. The frontend toggles between them.
+    const totalFeedCostProduced = allBatches[0] ? allBatches[0].totalCost : 0;
+    const totalFeedConsumedKgAllTime = allFeedingLogs[0] ? allFeedingLogs[0].totalKg : 0;
+    const totalFeedCostConsumed = totalFeedConsumedKgAllTime * settings.compoundedFeedCostPerKg;
+
     const totalBirdRevenue = allBirdSales[0] ? allBirdSales[0].totalRevenue : 0;
     const totalBirdsSold = allBirdSales[0] ? allBirdSales[0].totalCount : 0;
     const totalRevenue = totalEggRevenue + totalBirdRevenue;
-    const expectedProfit = totalRevenue - totalFeedCost;
+    const expectedProfitProduced = totalRevenue - totalFeedCostProduced;
+    const expectedProfitConsumed = totalRevenue - totalFeedCostConsumed;
 
     res.json({
       today: {
@@ -96,9 +107,12 @@ router.get(
       },
       allTime: {
         totalEggsCollected: allEggLogs[0]?.total || 0,
-        totalFeedCost,
+        totalFeedCostProduced,
+        totalFeedCostConsumed,
+        totalFeedConsumedKg: totalFeedConsumedKgAllTime,
         totalRevenue,
-        expectedProfit,
+        expectedProfitProduced,
+        expectedProfitConsumed,
         totalBirdsSold,
         currentFlockSize: flock.liveLayerCount + flock.liveRoosterCount + flock.liveChickCount,
       },
@@ -128,7 +142,6 @@ router.get(
           { $match: { isDeleted: { $ne: true }, date: { $gte: startOfDay(d), $lte: endOfDay(d) } } },
           { $group: { _id: null, total: { $sum: '$quantityCollected' } } },
         ]),
-        // Same fix as /summary — consumption (FeedingLog), not production (FeedBatch).
         FeedingLog.find({ isDeleted: { $ne: true }, date: { $gte: startOfDay(d), $lte: endOfDay(d) } }),
       ]);
 
