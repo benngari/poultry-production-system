@@ -37,6 +37,17 @@ const NAV_ITEMS = [
   { to: '/trash', label: 'Trash', roles: ['Administrator'], Icon: Trash2 },
 ];
 
+// Time-of-day greeting, re-evaluated on every render (so it's correct
+// whenever the header mounts — on login, on refresh, on nav).
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 5) return 'Good night';
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  if (hour < 21) return 'Good evening';
+  return 'Good night';
+};
+
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -104,7 +115,7 @@ const Layout = ({ children }) => {
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
             <span className="text-sm text-neutral-500">
-              Welcome, <span className="font-semibold" style={{ color: 'var(--text)' }}>{user?.name}</span>
+              {getGreeting()}, <span className="font-semibold" style={{ color: 'var(--text)' }}>{user?.name}</span>
             </span>
             <span className="text-xs px-2 py-1 rounded-full bg-accent-50 text-accent-700 dark:bg-accent-500/10 dark:text-accent-500">
               {user?.role}
