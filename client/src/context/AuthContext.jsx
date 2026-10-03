@@ -9,6 +9,10 @@ export const AuthProvider = ({ children }) => {
     return stored ? JSON.parse(stored) : null;
   });
   const [loading, setLoading] = useState(true);
+  // Only true right after an actual login() call in this tab — never on
+  // a page refresh or an already-valid token — so the welcome flash
+  // fires exactly once per real login, not on every reload.
+  const [justLoggedIn, setJustLoggedIn] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -35,6 +39,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', res.data.token);
     localStorage.setItem('user', JSON.stringify(res.data.user));
     setUser(res.data.user);
+    setJustLoggedIn(true);
     return res.data.user;
   };
 
@@ -49,8 +54,10 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const clearJustLoggedIn = () => setJustLoggedIn(false);
+
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, setUser, login, logout, loading, justLoggedIn, clearJustLoggedIn }}>
       {children}
     </AuthContext.Provider>
   );
