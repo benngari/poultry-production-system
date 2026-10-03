@@ -139,3 +139,52 @@ body {
 .force-light {
   color-scheme: light;
 }
+
+/* Responsive card-view for data tables on narrow screens — instead of a
+   cramped horizontally-scrolled table, each row becomes a stacked card
+   with label:value pairs. Opt-in via the `responsive-cards` class on
+   .table-wrap; applies only to pages that add data-label to each <td>. */
+@media (max-width: 640px) {
+  .table-wrap.responsive-cards table,
+  .table-wrap.responsive-cards thead,
+  .table-wrap.responsive-cards tbody,
+  .table-wrap.responsive-cards th,
+  .table-wrap.responsive-cards td,
+  .table-wrap.responsive-cards tr {
+    display: block;
+  }
+  .table-wrap.responsive-cards thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  .table-wrap.responsive-cards tbody tr {
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+  }
+  .table-wrap.responsive-cards tbody tr:last-child {
+    border-bottom: none;
+  }
+  .table-wrap.responsive-cards td {
+    border: none !important;
+    padding: 0.3rem 0 !important;
+    position: relative;
+    padding-left: 45% !important;
+    min-height: 1.4rem;
+  }
+  .table-wrap.responsive-cards td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    top: 0.3rem;
+    width: 42%;
+    font-weight: 600;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+  .table-wrap.responsive-cards td:empty::before {
+    content: none;
+  }
+}

@@ -42,8 +42,6 @@ const FeedingLogPage = () => {
   const submit = async (e) => {
     e.preventDefault();
     try {
-      // Reuses the flock feed-deduction endpoint — it deducts current
-      // FeedStock AND writes the FeedingLog entry in one call.
       await api.post('/flock/manual-feed-deduction', {
         quantityKg: form.quantityKg,
         note: form.note,
@@ -97,7 +95,7 @@ const FeedingLogPage = () => {
         </form>
       )}
 
-      <div className="table-wrap">
+      <div className="table-wrap responsive-cards">
         {loading ? (
           <TableSkeleton columns={5} />
         ) : logs.length === 0 ? (
@@ -108,11 +106,11 @@ const FeedingLogPage = () => {
             <tbody>
               {logs.map((l) => (
                 <tr key={l._id}>
-                  <td>{new Date(l.date).toLocaleDateString()}</td>
-                  <td>{l.quantityKg.toFixed(2)}kg</td>
-                  <td><SourceBadge source={l.source} /></td>
-                  <td className="text-neutral-500">{l.note || '—'}</td>
-                  <td>
+                  <td data-label="Date">{new Date(l.date).toLocaleDateString()}</td>
+                  <td data-label="Quantity">{l.quantityKg.toFixed(2)}kg</td>
+                  <td data-label="Source"><SourceBadge source={l.source} /></td>
+                  <td data-label="Note" className="text-neutral-500">{l.note || '—'}</td>
+                  <td data-label="">
                     {['Administrator', 'Manager'].includes(user?.role) && (
                       <button className="text-red-600 text-xs font-semibold" onClick={() => remove(l)}>Delete</button>
                     )}
