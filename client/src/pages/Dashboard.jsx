@@ -22,6 +22,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [alertPage, setAlertPage] = useState(0);
   const [feedCostBasis, setFeedCostBasis] = useState('consumed'); // 'consumed' | 'produced'
+  const [chartView, setChartView] = useState('weekly'); // 'weekly' | 'feedManure'
 
   const loadSummary = async () => {
     try {
@@ -163,33 +164,79 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="app-card lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold">Weekly Production</h2>
-            <div className="flex gap-1 rounded-lg border p-1" style={{ borderColor: 'var(--border)' }}>
-              {RANGES.map((r) => (
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="font-semibold">
+                {chartView === 'weekly' ? 'Weekly Production' : 'Feed vs Manure — Last 7 Days'}
+              </h2>
+              <div className="flex gap-1 rounded-lg border p-1" style={{ borderColor: 'var(--border)' }}>
                 <button
-                  key={r.key}
-                  onClick={() => setRange(r.key)}
-                  className={`px-3 py-1 rounded-md text-xs font-semibold ${
-                    range === r.key ? 'bg-accent-600 text-white' : 'text-neutral-500'
+                  onClick={() => setChartView('weekly')}
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                    chartView === 'weekly' ? 'bg-accent-600 text-white' : 'text-neutral-500'
                   }`}
                 >
-                  {r.label}
+                  Production
                 </button>
-              ))}
+                <button
+                  onClick={() => setChartView('feedManure')}
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                    chartView === 'feedManure' ? 'bg-accent-600 text-white' : 'text-neutral-500'
+                  }`}
+                >
+                  Feed vs Manure
+                </button>
+              </div>
             </div>
+
+            {chartView === 'weekly' && (
+              <div className="flex gap-1 rounded-lg border p-1" style={{ borderColor: 'var(--border)' }}>
+                {RANGES.map((r) => (
+                  <button
+                    key={r.key}
+                    onClick={() => setRange(r.key)}
+                    className={`px-3 py-1 rounded-md text-xs font-semibold ${
+                      range === r.key ? 'bg-accent-600 text-white' : 'text-neutral-500'
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={weekly}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="feedConsumedKg" name="Feed Consumed (kg)" fill="#a3a3f7" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="eggsCollected" name="Eggs" fill="#16a34a" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+
+          {chartView === 'weekly' ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={weekly}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="feedConsumedKg" name="Feed Consumed (kg)" fill="#a3a3f7" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="eggsCollected" name="Eggs" fill="#16a34a" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={feedManure}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="feedKg" name="Feed Given (kg)" fill="#a3a3f7" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="manureKg" name="Manure (kg)" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+              <p className="text-xs text-neutral-500 mt-2">
+                A rising manure-to-feed ratio over time can flag spillage, waste, or a health issue worth a
+                closer look — full daily breakdown and totals are on the Manure / Waste page.
+              </p>
+            </>
+          )}
         </div>
 
         <div className="app-card">
@@ -235,25 +282,6 @@ const Dashboard = () => {
             </>
           )}
         </div>
-      </div>
-
-      <div className="app-card">
-        <h2 className="font-semibold mb-4">Feed vs Manure — Last 7 Days</h2>
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={feedManure}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="feedKg" name="Feed Given (kg)" fill="#a3a3f7" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="manureKg" name="Manure (kg)" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-        <p className="text-xs text-neutral-500 mt-2">
-          A rising manure-to-feed ratio over time can flag spillage, waste, or a health issue worth a
-          closer look — full daily breakdown and totals are on the Manure / Waste page.
-        </p>
       </div>
     </div>
   );
