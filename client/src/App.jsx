@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
@@ -14,6 +14,7 @@ import Flock from './pages/Flock';
 import BirdSales from './pages/BirdSales';
 import FeedingLog from './pages/FeedingLog';
 import ManureLog from './pages/ManureLog';
+import HealthLog from './pages/HealthLog';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Users from './pages/Users';
@@ -37,6 +38,7 @@ function App() {
       <Route path="/bird-sales" element={withLayout(<BirdSales />)} />
       <Route path="/feeding-log" element={withLayout(<FeedingLog />)} />
       <Route path="/manure-log" element={withLayout(<ManureLog />)} />
+      <Route path="/health-log" element={withLayout(<HealthLog />)} />
       <Route path="/reports" element={withLayout(<Reports />)} />
       <Route path="/settings" element={withLayout(<Settings />)} />
       <Route

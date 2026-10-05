@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const auditLogSchema = new mongoose.Schema(
   {
@@ -6,16 +6,12 @@ const auditLogSchema = new mongoose.Schema(
     userName: { type: String, default: 'System' },
     action: {
       type: String,
-      enum: [
-        'create', 'update', 'delete', 'restore', 'permanent_delete',
-        'role_change', 'password_reset', 'activate', 'deactivate',
-        'stock_adjust', 'login', 'logout', 'register',
-      ],
+      enum: ['create', 'update', 'delete', 'restore', 'permanent_delete', 'role_change', 'password_reset', 'activate', 'deactivate', 'stock_adjust', 'login', 'logout', 'register'],
       required: true,
     },
     entityType: {
       type: String,
-      enum: ['FeedBatch', 'FeedIngredient', 'Flock', 'EggLog', 'DailyEggStock', 'BirdSale', 'Settings', 'User'],
+      enum: ['FeedBatch', 'FeedIngredient', 'Flock', 'EggLog', 'DailyEggStock', 'BirdSale', 'Settings', 'User', 'HealthLog'],
       required: true,
     },
     entityId: { type: mongoose.Schema.Types.ObjectId },

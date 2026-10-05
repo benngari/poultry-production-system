@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import EmptyState from '../components/EmptyState';
@@ -10,6 +10,7 @@ const CATEGORY_TABS = [
   { key: 'bird-sales', label: 'Bird Sales' },
   { key: 'feeding-logs', label: 'Feeding Log' },
   { key: 'manure-logs', label: 'Manure Log' },
+  { key: 'health-logs', label: 'Health Log' },
 ];
 
 const TABS = [{ key: 'all', label: 'All' }, ...CATEGORY_TABS];

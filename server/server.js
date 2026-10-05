@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -13,11 +13,13 @@ const eggLogRoutes = require('./routes/eggLogRoutes');
 const dailyEggStockRoutes = require('./routes/dailyEggStockRoutes');
 const feedingLogRoutes = require('./routes/feedingLogRoutes');
 const manureLogRoutes = require('./routes/manureLogRoutes');
+const healthLogRoutes = require('./routes/healthLogRoutes');
 const birdSaleRoutes = require('./routes/birdSaleRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const userRoutes = require('./routes/userRoutes');
 const auditLogRoutes = require('./routes/auditLogRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 connectDB();
 
@@ -35,11 +37,13 @@ app.use('/api/egg-logs', eggLogRoutes);
 app.use('/api/daily-egg-stock', dailyEggStockRoutes);
 app.use('/api/feeding-logs', feedingLogRoutes);
 app.use('/api/manure-logs', manureLogRoutes);
+app.use('/api/health-logs', healthLogRoutes);
 app.use('/api/bird-sales', birdSaleRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/reports', reportRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

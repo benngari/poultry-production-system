@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
@@ -79,6 +79,25 @@ const Dashboard = () => {
     }
   };
 
+  const [downloading, setDownloading] = useState(null); // 'daily' | 'weekly' | null
+
+  const downloadPdf = async (pdfRange) => {
+    setDownloading(pdfRange);
+    try {
+      const res = await api.get(`/reports/summary-pdf?range=${pdfRange}`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `poultry-${pdfRange}-summary-${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error('Failed to generate PDF');
+    } finally {
+      setDownloading(null);
+    }
+  };
+
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -111,7 +130,25 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="page-title">Dashboard</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="page-title">Dashboard</h1>
+        <div className="flex gap-2">
+          <button
+            className="btn-secondary text-xs"
+            onClick={() => downloadPdf('daily')}
+            disabled={downloading !== null}
+          >
+            {downloading === 'daily' ? 'Generating…' : 'Download Daily PDF'}
+          </button>
+          <button
+            className="btn-secondary text-xs"
+            onClick={() => downloadPdf('weekly')}
+            disabled={downloading !== null}
+          >
+            {downloading === 'weekly' ? 'Generating…' : 'Download Weekly PDF'}
+          </button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard label="Eggs Collected Today" value={summary.today.eggsCollected} />

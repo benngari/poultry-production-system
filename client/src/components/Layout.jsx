@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Utensils,
   Recycle,
+  HeartPulse,
   FileBarChart,
   Settings as SettingsIcon,
   Users as UsersIcon,
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { to: '/egg-log', label: 'Egg Log', roles: null, Icon: Egg },
   { to: '/daily-egg-stock', label: 'Daily Egg Stock', roles: null, Icon: ClipboardList },
   { to: '/manure-log', label: 'Manure / Waste', roles: null, Icon: Recycle },
+  { to: '/health-log', label: 'Health & Mortality', roles: null, Icon: HeartPulse },
   { to: '/flock', label: 'Flock', roles: null, Icon: Bird },
   { to: '/bird-sales', label: 'Bird Sales', roles: null, Icon: ShoppingCart },
   { to: '/reports', label: 'Reports', roles: null, Icon: FileBarChart },
