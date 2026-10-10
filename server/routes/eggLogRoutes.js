@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const asyncHandler = require('express-async-handler');
 const EggLog = require('../models/EggLog');
 const logAction = require('../utils/logAction');
@@ -6,6 +6,9 @@ const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(protect);
+
+const CAN_LOG = ['Administrator', 'Manager', 'Flock Operator'];
+const MAX_BULK_ENTRIES = 31; // a month's worth, generous ceiling against abuse
 
 router.get(
   '/',
@@ -17,7 +20,7 @@ router.get(
 
 router.post(
   '/',
-  authorize('Administrator', 'Manager', 'Flock Operator'),
+  authorize(...CAN_LOG),
   asyncHandler(async (req, res) => {
     const { date, quantityCollected } = req.body;
     if (!date || quantityCollected === undefined || Number(quantityCollected) < 0) {
@@ -40,9 +43,63 @@ router.post(
   })
 );
 
+// POST /api/egg-logs/bulk — catch-up entry for several days at once
+// (e.g. after being away). body: { entries: [{ date, quantityCollected }, ...] }.
+// Validates every row before creating any of them, same "all-or-nothing"
+// pattern used for FeedBatch — a bad row partway through a week shouldn't
+// leave half the week saved and half not.
+router.post(
+  '/bulk',
+  authorize(...CAN_LOG),
+  asyncHandler(async (req, res) => {
+    const { entries } = req.body;
+    if (!Array.isArray(entries) || entries.length === 0) {
+      res.status(400);
+      throw new Error('At least one entry is required');
+    }
+    if (entries.length > MAX_BULK_ENTRIES) {
+      res.status(400);
+      throw new Error(`Cannot submit more than ${MAX_BULK_ENTRIES} entries at once`);
+    }
+
+    const prepared = [];
+    for (const entry of entries) {
+      const { date, quantityCollected } = entry;
+      if (!date) {
+        res.status(400);
+        throw new Error('Every entry needs a date');
+      }
+      const parsedDate = new Date(date);
+      if (isNaN(parsedDate.getTime())) {
+        res.status(400);
+        throw new Error(`Invalid date: ${date}`);
+      }
+      const qty = Number(quantityCollected);
+      if (quantityCollected === undefined || quantityCollected === '' || isNaN(qty) || qty < 0) {
+        res.status(400);
+        throw new Error(`Invalid quantity for ${date}`);
+      }
+      prepared.push({ date: parsedDate, quantityCollected: qty, recordedBy: req.user._id });
+    }
+
+    const created = await EggLog.insertMany(prepared);
+
+    const totalEggs = prepared.reduce((s, e) => s + e.quantityCollected, 0);
+    const dateRange = `${prepared[0].date.toISOString().slice(0, 10)} to ${prepared[prepared.length - 1].date.toISOString().slice(0, 10)}`;
+    await logAction(req, {
+      action: 'create',
+      entityType: 'EggLog',
+      entityLabel: `Bulk entry (${prepared.length} days)`,
+      details: `${dateRange}, ${totalEggs} eggs total`,
+    });
+
+    res.status(201).json(created);
+  })
+);
+
 router.put(
   '/:id',
-  authorize('Administrator', 'Manager', 'Flock Operator'),
+  authorize(...CAN_LOG),
   asyncHandler(async (req, res) => {
     const log = await EggLog.findById(req.params.id);
     if (!log || log.isDeleted) {

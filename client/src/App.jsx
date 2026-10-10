@@ -19,6 +19,7 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Users from './pages/Users';
 import AuditLog from './pages/AuditLog';
+import UserActivity from './pages/UserActivity';
 import Trash from './pages/Trash';
 
 const withLayout = (el) => <ProtectedRoute>{<Layout>{el}</Layout>}</ProtectedRoute>;
@@ -57,6 +58,16 @@ function App() {
           <ProtectedRoute roles={['Administrator']}>
             <Layout>
               <AuditLog />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/user-activity"
+        element={
+          <ProtectedRoute roles={['Administrator']}>
+            <Layout>
+              <UserActivity />
             </Layout>
           </ProtectedRoute>
         }

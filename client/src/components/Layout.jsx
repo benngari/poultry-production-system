@@ -16,6 +16,7 @@ import {
   Settings as SettingsIcon,
   Users as UsersIcon,
   ScrollText,
+  Activity,
   Trash2,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -38,6 +39,7 @@ const NAV_ITEMS = [
   { to: '/settings', label: 'Settings', roles: null, Icon: SettingsIcon },
   { to: '/users', label: 'User Management', roles: ['Administrator'], Icon: UsersIcon },
   { to: '/audit-log', label: 'Audit Log', roles: ['Administrator'], Icon: ScrollText },
+  { to: '/user-activity', label: 'User Activity', roles: ['Administrator'], Icon: Activity },
   { to: '/trash', label: 'Trash', roles: ['Administrator'], Icon: Trash2 },
 ];
 
