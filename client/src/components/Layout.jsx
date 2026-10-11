@@ -18,6 +18,7 @@ import {
   ScrollText,
   Activity,
   Trash2,
+  Menu as MenuIcon,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -60,17 +61,37 @@ const Layout = ({ children }) => {
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: 'var(--bg)' }}>
       <WelcomeFlash />
+
+      {/* Mobile only: tap outside the open drawer to close it. */}
+      {open && (
+        <div
+          className="fixed inset-0 z-20 bg-black/40 lg:hidden"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       <aside
-        className={`fixed z-20 inset-y-0 left-0 w-64 border-r transform transition-transform lg:static lg:translate-x-0 ${
+        className={`fixed z-30 inset-y-0 left-0 w-64 border-r flex flex-col transform transition-transform lg:static lg:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}
       >
-        <div className="p-5 border-b" style={{ borderColor: 'var(--border)' }}>
+        <div className="p-5 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
           <div className="font-bold text-lg text-accent-600">Poultry Pro</div>
           <div className="text-xs text-neutral-500">Layers &amp; Roosters Management</div>
         </div>
-        <nav className="p-3 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 90px)' }}>
+
+        {/* Mobile only: the greeting and role that no longer fit in the slim top bar. */}
+        <div className="lg:hidden shrink-0 px-5 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
+          <div className="text-xs text-neutral-500">{getGreeting()},</div>
+          <div className="font-semibold">{user?.name}</div>
+          <span className="mt-1 inline-block text-xs px-2 py-0.5 rounded-full bg-accent-50 text-accent-700 dark:bg-accent-500/10 dark:text-accent-500">
+            {user?.role}
+          </span>
+        </div>
+
+        <nav className="p-3 space-y-1 overflow-y-auto flex-1 min-h-0 lg:flex-none lg:max-h-[calc(100vh-90px)]">
           {visibleItems.map((item) => (
             <NavLink
               key={item.to}
@@ -92,16 +113,41 @@ const Layout = ({ children }) => {
         </nav>
       </aside>
 
-      <div className="flex-1 flex flex-col lg:pl-0">
+      <div className="flex-1 flex flex-col lg:pl-0 min-w-0">
         <header
           className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b"
           style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}
         >
-          <button className="lg:hidden btn-secondary" onClick={() => setOpen(!open)}>
-            Menu
-          </button>
-          <div className="flex-1" />
-          <div className="flex items-center gap-3">
+          {/* Mobile: hamburger + app name, one slim row. */}
+          <div className="flex items-center gap-3 lg:hidden">
+            <button
+              type="button"
+              onClick={() => setOpen(!open)}
+              aria-label="Open menu"
+              className="p-1 -ml-1 text-neutral-600 dark:text-neutral-300"
+            >
+              <MenuIcon size={26} />
+            </button>
+            <span className="font-bold text-lg text-accent-600">Poultry Pro</span>
+          </div>
+
+          <div className="flex items-center gap-4 lg:hidden">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label="Toggle dark mode"
+              className="text-2xl leading-none"
+            >
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+            <button type="button" onClick={handleLogout} className="text-base font-semibold text-red-500">
+              Logout
+            </button>
+          </div>
+
+          {/* Desktop: unchanged — greeting, role badge, bordered buttons. */}
+          <div className="hidden lg:block flex-1" />
+          <div className="hidden lg:flex items-center gap-3">
             <button
               className="btn-secondary px-2"
               onClick={toggleTheme}
