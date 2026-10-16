@@ -11,7 +11,7 @@ const auditLogSchema = new mongoose.Schema(
     },
     entityType: {
       type: String,
-      enum: ['FeedBatch', 'FeedIngredient', 'Flock', 'EggLog', 'DailyEggStock', 'BirdSale', 'Settings', 'User', 'HealthLog'],
+      enum: ['FeedBatch', 'FeedIngredient', 'Flock', 'EggLog', 'DailyEggStock', 'BirdSale', 'Settings', 'User', 'HealthLog', 'Report'],
       required: true,
     },
     entityId: { type: mongoose.Schema.Types.ObjectId },

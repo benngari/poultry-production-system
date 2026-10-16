@@ -8,9 +8,78 @@ const FeedingLog = require('../models/FeedingLog');
 const ManureLog = require('../models/ManureLog');
 const Flock = require('../models/Flock');
 const Settings = require('../models/Settings');
-const { protect } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
+const logAction = require('../utils/logAction');
+const { buildReport, normalizeFilters, toClientReport, ReportInputError } = require('../utils/reportData');
+const { renderPdf, renderExcel } = require('../utils/reportFiles');
+const { createShareToken, verifyShareToken } = require('../utils/shareToken');
 
 const router = express.Router();
+
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+// Builds the file and sends it as a download.
+const sendReportFile = async (res, report, format, generatedBy) => {
+  const isExcel = format === 'excel';
+  const buffer = isExcel ? await renderExcel(report) : await renderPdf(report, generatedBy);
+  const stamp = new Date().toISOString().slice(0, 10);
+  res.setHeader('Content-Type', isExcel ? XLSX_MIME : 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="${report.type}_report_${stamp}.${isExcel ? 'xlsx' : 'pdf'}"`);
+  res.setHeader('Content-Length', buffer.length);
+  res.end(buffer);
+};
+
+// Plain page for the person who opens a dead link — static text only.
+const linkPage = (title, message) =>
+  `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>` +
+  `<body style="font-family:system-ui,sans-serif;max-width:32rem;margin:15vh auto;padding:0 1rem;color:#292524">` +
+  `<h1 style="font-size:1.25rem">${title}</h1><p>${message}</p></body></html>`;
+
+// PUBLIC — deliberately registered BEFORE router.use(protect): the person
+// who gets this link on WhatsApp has no login. The signed token is the only
+// thing guarding it; see utils/shareToken.js.
+router.get(
+  '/shared/:token',
+  asyncHandler(async (req, res) => {
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+
+    const result = verifyShareToken(req.params.token);
+    if (!result.ok) {
+      if (result.reason === 'expired') {
+        return res.status(410).type('html').send(linkPage('This link has expired', 'Ask the sender to share the report again.'));
+      }
+      return res.status(403).type('html').send(linkPage('This link is not valid', 'Check that the whole link was copied, or ask the sender to share it again.'));
+    }
+
+    const { type, format, startDate, endDate } = result.data;
+    let report;
+    try {
+      report = await buildReport({ type, startDate, endDate });
+    } catch (err) {
+      if (err instanceof ReportInputError) {
+        return res.status(403).type('html').send(linkPage('This link is not valid', 'Ask the sender to share it again.'));
+      }
+      throw err;
+    }
+    await sendReportFile(res, report, format, 'Shared link');
+  })
+);
+
+// Anything that goes wrong on the PUBLIC link route ends up here, so a person
+// opening a link never sees a raw JSON error or a stack trace. A malformed
+// link (e.g. a broken %-escape, which Express reports as a 400) reads as "not
+// valid"; anything else is a generic problem and nothing is leaked to them.
+router.use('/shared', (err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  res.setHeader('Cache-Control', 'private, no-store');
+  if (err instanceof URIError || err.status === 400 || err.statusCode === 400) {
+    return res.status(403).type('html').send(linkPage('This link is not valid', 'Check that the whole link was copied, or ask the sender to share it again.'));
+  }
+  console.error('Shared report link failed:', err);
+  return res.status(500).type('html').send(linkPage('Something went wrong', 'The report could not be prepared. Please try again in a minute.'));
+});
+
 router.use(protect);
 
 const dateStr = (d) => new Date(d).toISOString().slice(0, 10);
@@ -196,6 +265,71 @@ router.get(
     }
 
     doc.end();
+  })
+);
+
+// ---- Reports page: one data source behind the table, PDF, Excel and sharing ----
+
+const filtersFromQuery = (res, query) => {
+  try {
+    return normalizeFilters({ type: query.type, startDate: query.startDate, endDate: query.endDate });
+  } catch (err) {
+    if (err instanceof ReportInputError) res.status(400);
+    throw err;
+  }
+};
+
+// GET /api/reports/data?type=egg-logs&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+router.get(
+  '/data',
+  asyncHandler(async (req, res) => {
+    const filters = filtersFromQuery(res, req.query);
+    res.json(toClientReport(await buildReport(filters)));
+  })
+);
+
+// GET /api/reports/export/pdf|excel?type=...&startDate=...&endDate=...
+router.get(
+  '/export/:format',
+  asyncHandler(async (req, res) => {
+    const { format } = req.params;
+    if (format !== 'pdf' && format !== 'excel') {
+      res.status(404);
+      throw new Error('Unknown export format');
+    }
+    const filters = filtersFromQuery(res, req.query);
+    await sendReportFile(res, await buildReport(filters), format, req.user.name);
+  })
+);
+
+// POST /api/reports/share-link  { type, format, startDate, endDate }
+// Creates a public download link that works for 48 hours. Limited to
+// Administrator and Manager, since it hands report data to someone with no
+// login. (Everyone can still send the FILE itself from their own phone.)
+router.post(
+  '/share-link',
+  authorize('Administrator', 'Manager'),
+  asyncHandler(async (req, res) => {
+    const { format } = req.body;
+    if (format !== 'pdf' && format !== 'excel') {
+      res.status(400);
+      throw new Error('format must be "pdf" or "excel"');
+    }
+    const filters = filtersFromQuery(res, req.body);
+    const { token, expiresAt } = createShareToken({ ...filters, format });
+
+    const base =
+      (process.env.PUBLIC_API_URL || '').replace(/\/+$/, '') ||
+      `${(req.get('x-forwarded-proto') || req.protocol).split(',')[0].trim()}://${req.get('host')}`;
+
+    await logAction(req, {
+      action: 'create',
+      entityType: 'Report',
+      entityLabel: `${filters.type} (${format}) public link`,
+      details: `Anyone with the link can open it until ${expiresAt.toISOString()}. Range: ${filters.startDate || 'start'} to ${filters.endDate || 'now'}.`,
+    });
+
+    res.status(201).json({ url: `${base}/api/reports/shared/${token}`, expiresAt });
   })
 );
 
