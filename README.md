@@ -30,7 +30,7 @@ needs approval from User Management before it can log in.
 
 
 
-## What's implemented
+features
 
 - Approval-gated registration, JWT auth, 4 roles (Administrator, Manager,
   Flock Operator, Store Keeper) enforced via `authorize(...roles)` per
