@@ -5,18 +5,6 @@ own feed, track egg collection/sales, deduct feed stock automatically from
 live flock size, and track bird sales — modeled on a sibling Dairy
 Production System's architecture, auth, and UI patterns.
 
-## Stack
-
-- **Frontend:** React 18 + Vite, Tailwind CSS, React Router v6, Axios,
-  react-hot-toast, Recharts — in `client/`
-- **Backend:** Node.js + Express, MongoDB via Mongoose, JWT + bcryptjs,
-  node-cron — in `server/`
-The **first account you register becomes Administrator automatically and
-is auto-approved.** Every account after that starts `isActive: false` and
-needs approval from User Management before it can log in.
-
-
-
 features
 
 - Approval-gated registration, JWT auth, 4 roles (Administrator, Manager,
