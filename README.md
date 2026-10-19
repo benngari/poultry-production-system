@@ -28,11 +28,7 @@ needs approval from User Management before it can log in.
   user, whitelist `0.0.0.0/0` (or Render's IPs), and use that connection
   string as `MONGO_URI`.
 
-If a deploy seems to silently not include your latest changes, check
-Render's **Events tab** first — the free tier keeps serving the last
-*successful* deploy if a new one fails to boot, which looks identical to
-"my feature doesn't exist" but is actually a crashed boot on an unrelated
-file.
+
 
 ## What's implemented
 
