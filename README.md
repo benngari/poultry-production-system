@@ -11,24 +11,6 @@ Production System's architecture, auth, and UI patterns.
   react-hot-toast, Recharts — in `client/`
 - **Backend:** Node.js + Express, MongoDB via Mongoose, JWT + bcryptjs,
   node-cron — in `server/`
-
-## Local setup
-
-```bash
-# server
-cd server
-cp .env.example .env   # fill in MONGO_URI and JWT_SECRET
-npm install
-npm run seed            # seeds the 10 reference feed ingredients
-npm run dev              # http://localhost:5000
-
-# client (new terminal)
-cd client
-cp .env.example .env    # VITE_API_URL=http://localhost:5000/api
-npm install
-npm run dev              # http://localhost:5173
-```
-
 The **first account you register becomes Administrator automatically and
 is auto-approved.** Every account after that starts `isActive: false` and
 needs approval from User Management before it can log in.
