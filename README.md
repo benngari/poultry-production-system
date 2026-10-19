@@ -57,5 +57,3 @@ features
    batch and checking the Audit Log page shows it.
 6. `Settings.currency` is read on the frontend everywhere a price
    displays, not hardcoded `"KSh"` as literal text.
-
-
