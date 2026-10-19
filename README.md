@@ -58,9 +58,4 @@ features
 6. `Settings.currency` is read on the frontend everywhere a price
    displays, not hardcoded `"KSh"` as literal text.
 
-## Suggested build order
 
-Auth end-to-end first → `FeedIngredient` + `FeedBatch` (the cost model is
-the core of the app) → `Flock` + `BirdSale` → `EggLog` + `DailyEggStock` →
-the cron job → the Dashboard last, once every number it displays actually
-exists somewhere to query.
