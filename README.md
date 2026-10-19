@@ -1,6 +1,6 @@
 # Poultry Production System
 
-A web app for a small layers + roosters poultry farm to mix and cost their
+This is a web app for a small layers + roosters poultry farm to mix and cost their
 own feed, track egg collection/sales, deduct feed stock automatically from
 live flock size, and track bird sales — modeled on a sibling Dairy
 Production System's architecture, auth, and UI patterns.
