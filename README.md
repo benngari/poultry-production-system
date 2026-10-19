@@ -15,19 +15,6 @@ The **first account you register becomes Administrator automatically and
 is auto-approved.** Every account after that starts `isActive: false` and
 needs approval from User Management before it can log in.
 
-## Deployment (same pattern as the sibling dairy project)
-
-- **Frontend → Vercel.** Root Directory: `client`. `client/vercel.json`
-  already has the SPA rewrite rule. Set `VITE_API_URL` to
-  `<your-render-url>/api` in Vercel's env vars.
-- **Backend → Render (free tier).** Root Directory: `server`. Set
-  `MONGO_URI`, `JWT_SECRET`, `NODE_ENV=production` in Render's env vars.
-  **The free tier spins down after ~15 min idle — the first request after
-  that can take 50s+ to respond. This is expected, not a bug.**
-- **Database → MongoDB Atlas.** Create a free cluster, add a database
-  user, whitelist `0.0.0.0/0` (or Render's IPs), and use that connection
-  string as `MONGO_URI`.
-
 
 
 features
