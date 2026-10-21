@@ -40,7 +40,7 @@ features
   bird sales.
 - `Users`, `AuditLog`, and `Trash` pages, Administrator-only.
 
-## Known traps this build deliberately avoids (see brief §8)
+## Known traps this build deliberately avoids
 
 1. Stock-sufficiency checked before deducting, for every ingredient,
    before saving anything.
