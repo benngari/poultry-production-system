@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import api from '../api/axios';
 import StatCard from '../components/StatCard';
 import DashboardSkeleton from '../components/DashboardSkeleton';
+import FlockPerformance from '../components/FlockPerformance';
 
 const RANGES = [
   { key: 'week', label: 'Weekly' },
@@ -198,6 +199,8 @@ const Dashboard = () => {
           "By Feed Purchased" costs every kg ever added to the store, including feed still sitting unused.
         </p>
       </div>
+
+      <FlockPerformance />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="app-card lg:col-span-2">

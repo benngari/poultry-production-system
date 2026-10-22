@@ -19,6 +19,7 @@ const settingsRoutes = require('./routes/settingsRoutes');
 const userRoutes = require('./routes/userRoutes');
 const auditLogRoutes = require('./routes/auditLogRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const flockPerformanceRoutes = require('./routes/flockPerformanceRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 
 connectDB();
@@ -43,6 +44,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/flock-performance', flockPerformanceRoutes);
 app.use('/api/reports', reportRoutes);
 
 app.use(notFound);
