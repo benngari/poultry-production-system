@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -24,6 +24,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { getGreeting } from '../utils/greeting';
 import WelcomeFlash from './WelcomeFlash';
+import InstallApp from './InstallApp';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', roles: null, Icon: LayoutDashboard },
@@ -111,6 +112,7 @@ const Layout = ({ children }) => {
             </NavLink>
           ))}
         </nav>
+        <InstallApp />
       </aside>
 
       <div className="flex-1 flex flex-col lg:pl-0 min-w-0">
@@ -138,14 +140,14 @@ const Layout = ({ children }) => {
               aria-label="Toggle dark mode"
               className="text-2xl leading-none"
             >
-              {theme === 'dark' ? '☀️' : '🌙'}
+              {theme === 'dark' ? '??' : '??'}
             </button>
             <button type="button" onClick={handleLogout} className="text-base font-semibold text-red-500">
               Logout
             </button>
           </div>
 
-          {/* Desktop: unchanged — greeting, role badge, bordered buttons. */}
+          {/* Desktop: unchanged � greeting, role badge, bordered buttons. */}
           <div className="hidden lg:block flex-1" />
           <div className="hidden lg:flex items-center gap-3">
             <button
@@ -154,10 +156,10 @@ const Layout = ({ children }) => {
               title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
               aria-label="Toggle dark mode"
             >
-              {theme === 'dark' ? '☀️' : '🌙'}
+              {theme === 'dark' ? '??' : '??'}
             </button>
             <span className="text-sm text-neutral-500">
-              Welcome, <span className="font-semibold" style={{ color: 'var(--text)' }}>{user?.name}</span> — {getGreeting()}
+              Welcome, <span className="font-semibold" style={{ color: 'var(--text)' }}>{user?.name}</span> � {getGreeting()}
             </span>
             <span className="text-xs px-2 py-1 rounded-full bg-accent-50 text-accent-700 dark:bg-accent-500/10 dark:text-accent-500">
               {user?.role}
